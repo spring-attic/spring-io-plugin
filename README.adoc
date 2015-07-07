@@ -14,17 +14,17 @@ Provides additional checks to ensure Spring IO Platform compatibility
 
 == Quick Start
 
-See http://repo.spring.io/repo/org/springframework/build/gradle/spring-io-plugin/[repo.spring.io] to determine
+See https://repo.spring.io/repo/io/spring/gradle/spring-io-plugin/[repo.spring.io] to determine
 the latest available version. Then configure the plugin in your project as follows:
 
 [source,groovy]
 ----
 buildscript {
     repositories {
-        maven { url 'https://repo.spring.io/plugins-release' }
+        maven { url 'https://repo.spring.io/plugins-snapshot' }
     }
     dependencies {
-        classpath 'org.springframework.build.gradle:spring-io-plugin:0.0.3.RELEASE'
+        classpath 'io.spring.gradle:spring-io-plugin:0.0.4.BUILD-SNAPSHOT'
     }
 }
 
@@ -33,7 +33,7 @@ buildscript {
 configure(allprojects) {
     if (project.hasProperty('platformVersion')) {
         apply plugin: 'spring-io'
-        
+
         // necessary to resolve the Spring IO versions (which may include snapshots)
         repositories {
            maven { url "https://repo.spring.io/libs-snapshot" }
@@ -153,7 +153,7 @@ Using the following file structure:
     └── flat-repository-versions.properties
 ```
 
-You can reference the local versions properties files with the following Gradle configuration: 
+You can reference the local versions properties files with the following Gradle configuration:
 
 [source,groovy]
 ----
