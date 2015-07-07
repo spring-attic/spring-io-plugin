@@ -1,13 +1,12 @@
 package io.spring.gradle.springio
 
-import io.spring.gradle.springio.CheckPlatformDependenciesBeforeResolveAction;
+import io.spring.gradle.dependencymanagement.DependencyManagementExtension
 
-import org.gradle.api.Action
-import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.InvalidUserDataException
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.DependencyResolveDetails
-import org.gradle.api.artifacts.ResolvableDependencies;
+import org.gradle.api.artifacts.ResolvableDependencies
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.DefaultDependencyResolveDetails
 import org.gradle.testfixtures.ProjectBuilder
@@ -24,6 +23,7 @@ class CheckPlatformDependenciesBeforeResolveActionTests extends Specification {
 	Project child
 	Configuration config
 	CheckPlatformDependenciesBeforeResolveAction action
+	def dependencyManagement
 
 	def setup() {
 		def projectDir = new File('.').absoluteFile
@@ -35,17 +35,26 @@ class CheckPlatformDependenciesBeforeResolveActionTests extends Specification {
 
 		parent.repositories { maven { url 'src/test/resources/test-maven-repository' } }
 
-		Configuration versionsConfiguration = parent.configurations.create('versions')
+		dependencyManagement = ['managedVersions': [:]]
 
-		parent.dependencies {
-			versions 'test:versions:1.0.0@properties'
-		}
-
-		action = new CheckPlatformDependenciesBeforeResolveAction(project: parent, configuration: config, versionsConfiguration: versionsConfiguration)
+		action = new CheckPlatformDependenciesBeforeResolveAction(configuration: config, dependencyManagement: dependencyManagement)
 
 		child = ProjectBuilder.builder().withName('child').withParent(parent).build()
 		child.group = parent.group
 		child.version = parent.version
+	}
+
+	def "Execution succeeds with mapped direct dependency"() {
+		setup:
+			DependencyResolveDetails details = details('a:b:1.0')
+			parent.dependencies {
+				dependencyManagement.managedVersions['a:b'] = '1.5'
+			}
+			when:
+				action.execute(Mock(ResolvableDependencies))
+				config.resolutionStrategy.dependencyResolveRule.execute(details)
+			then:
+				config.resolvedConfiguration
 	}
 
 	def "Execution fails with unmapped direct dependency"() {

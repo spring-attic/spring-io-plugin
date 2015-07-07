@@ -1,5 +1,8 @@
 package io.spring.gradle.springio
 
+import io.spring.gradle.dependencymanagement.DependencyManagementExtension
+
+import org.gradle.api.Action
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.Dependency
@@ -7,16 +10,20 @@ import org.gradle.api.artifacts.DependencyResolveDetails
 import org.gradle.api.artifacts.ModuleVersionSelector
 import org.gradle.api.artifacts.ResolvableDependencies
 
-class CheckPlatformDependenciesBeforeResolveAction extends AbstractPlatformDependenciesBeforeResolveAction {
+class CheckPlatformDependenciesBeforeResolveAction implements Action<ResolvableDependencies> {
+
+	Configuration configuration
+
+	def dependencyManagement
 
 	boolean failOnUnmappedDirectDependency = true
 
 	boolean failOnUnmappedTransitiveDependency = false
 
 	@Override
-	public void doExecute(ResolvableDependencies resolvableDependencies, Map<String, ModuleVersionSelector> selectors) {
+	public void execute(ResolvableDependencies resolvableDependencies) {
 		CheckingDependencyResolveDetailsAction checkingAction = new CheckingDependencyResolveDetailsAction(
-			dependencyToSelector: selectors, configuration: configuration, ignoredDependencies: ignoredDependencies)
+				configuration: configuration, dependencyManagement: dependencyManagement)
 
 		configuration.resolutionStrategy.eachDependency checkingAction
 		configuration.incoming.afterResolve {
@@ -37,24 +44,26 @@ class CheckPlatformDependenciesBeforeResolveAction extends AbstractPlatformDepen
 		}
 	}
 
-	private static class CheckingDependencyResolveDetailsAction extends AbstractDependencyResolveDetailsAction {
+	private static class CheckingDependencyResolveDetailsAction implements Action<DependencyResolveDetails> {
 
 		Configuration configuration
+
+		def dependencyManagement
 
 		List<ModuleVersionSelector> unmappedDirectDependencies = []
 
 		List<ModuleVersionSelector> unmappedTransitiveDependencies = []
 
-		void execute(DependencyResolveDetails details, ModuleVersionSelector springIoMapping) {
+		void execute(DependencyResolveDetails details) {
 			ModuleVersionSelector requested = details.requested
-			if(!springIoMapping) {
+			Map managedVersions = dependencyManagement.managedVersions
+			String id = "${details.requested.group}:${details.requested.name}"
+			if (!managedVersions[id]) {
 				if (isDirectDependency(requested)) {
 					unmappedDirectDependencies << requested
 				} else {
 					unmappedTransitiveDependencies << requested
 				}
-			} else {
-				details.useTarget springIoMapping
 			}
 		}
 

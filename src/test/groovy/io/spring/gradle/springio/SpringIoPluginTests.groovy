@@ -1,5 +1,6 @@
 package io.spring.gradle.springio
 
+import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
 import io.spring.gradle.springio.AlternativeDependenciesTask;
 import io.spring.gradle.springio.IncompleteExcludesTask;
 import io.spring.gradle.springio.SpringIoPlugin;
@@ -56,12 +57,12 @@ class SpringIoPluginTests extends Specification {
 			project.configurations.springIoTestRuntime.extendsFrom.contains(project.configurations.testRuntime)
 	}
 
-	def "Sets up springIoVersions configuration"() {
+	def "Applies dependency management plugin"() {
 		when:
 			project.apply plugin: SpringIoPlugin
 			project.apply plugin: JavaPlugin
 		then:
-			project.configurations.springIoVersions
+			project.plugins.findPlugin(DependencyManagementPlugin)
 	}
 
 	def "Creates springIoCheck Task"() {

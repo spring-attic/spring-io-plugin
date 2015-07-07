@@ -28,8 +28,15 @@ dependencies {
 	runtime 'asm:asm:3.3.1'
 
 	testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
+}
 
-	springIoVersions files('io-versions.properties')
+dependencyManagement {
+	springIoTestRuntime {
+		dependencies {
+			dependency 'org.springframework.security:spring-security-core:3.2.3.RELEASE'
+			dependency 'org.springframework:spring-core:4.0.4.RELEASE'
+		}
+	}
 }
 
 test {

@@ -1,5 +1,7 @@
 package io.spring.gradle.springio
 
+import io.spring.gradle.dependencymanagement.DependencyManagementExtension
+
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
@@ -9,9 +11,9 @@ import org.gradle.api.tasks.TaskAction
 
 class DependencyVersionMappingCheckTask extends DefaultTask {
 
-	Configuration versionsConfiguration
-
 	Configuration configuration
+
+	def dependencyManagement
 
 	@Input
 	@Optional
@@ -28,8 +30,8 @@ class DependencyVersionMappingCheckTask extends DefaultTask {
 		}
 
 		configuration.incoming.beforeResolve(
-			new CheckPlatformDependenciesBeforeResolveAction(project: project, configuration: configuration,
-				versionsConfiguration: versionsConfiguration,
+			new CheckPlatformDependenciesBeforeResolveAction(configuration: configuration,
+				dependencyManagement: dependencyManagement,
 				failOnUnmappedDirectDependency: failOnUnmappedDirectDependency,
 				failOnUnmappedTransitiveDependency: failOnUnmappedTransitiveDependency))
 
