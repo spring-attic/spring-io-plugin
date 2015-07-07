@@ -1,11 +1,12 @@
-package org.springframework.build.gradle.springio
+package io.spring.gradle.springio
+
+import io.spring.gradle.springio.AlternativeDependenciesTask;
+import io.spring.gradle.springio.SpringIoPlugin;
 
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.testfixtures.ProjectBuilder
-import org.springframework.build.gradle.springio.AlternativeDependenciesTask;
-import org.springframework.build.gradle.springio.SpringIoPlugin;
 
 import spock.lang.Specification
 

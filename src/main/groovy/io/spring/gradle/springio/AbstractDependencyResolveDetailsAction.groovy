@@ -1,4 +1,4 @@
-package org.springframework.build.gradle.springio;
+package io.spring.gradle.springio;
 import java.util.Map;
 import java.util.Set;
 

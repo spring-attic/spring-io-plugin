@@ -1,4 +1,4 @@
-package org.springframework.build.gradle.springio
+package io.spring.gradle.springio
 
 import org.gradle.api.InvalidUserDataException
 import org.gradle.api.artifacts.Configuration

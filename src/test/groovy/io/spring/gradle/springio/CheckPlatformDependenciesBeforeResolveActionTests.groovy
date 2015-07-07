@@ -1,4 +1,6 @@
-package org.springframework.build.gradle.springio
+package io.spring.gradle.springio
+
+import io.spring.gradle.springio.CheckPlatformDependenciesBeforeResolveAction;
 
 import org.gradle.api.Action
 import org.gradle.api.InvalidUserDataException;
@@ -9,7 +11,6 @@ import org.gradle.api.artifacts.ResolvableDependencies;
 import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.DefaultDependencyResolveDetails
 import org.gradle.testfixtures.ProjectBuilder
-import org.springframework.build.gradle.springio.CheckPlatformDependenciesBeforeResolveAction;
 
 import spock.lang.Specification
 

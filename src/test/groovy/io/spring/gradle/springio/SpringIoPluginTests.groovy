@@ -1,4 +1,8 @@
-package org.springframework.build.gradle.springio
+package io.spring.gradle.springio
+
+import io.spring.gradle.springio.AlternativeDependenciesTask;
+import io.spring.gradle.springio.IncompleteExcludesTask;
+import io.spring.gradle.springio.SpringIoPlugin;
 
 import com.google.common.io.Files
 
@@ -6,9 +10,6 @@ import org.gradle.api.*
 import org.gradle.api.plugins.GroovyPlugin
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.testfixtures.ProjectBuilder
-import org.springframework.build.gradle.springio.AlternativeDependenciesTask;
-import org.springframework.build.gradle.springio.IncompleteExcludesTask;
-import org.springframework.build.gradle.springio.SpringIoPlugin;
 
 import spock.lang.AutoCleanup
 import spock.lang.Specification

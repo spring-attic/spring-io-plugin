@@ -1,4 +1,7 @@
-package org.springframework.build.gradle.springio
+package io.spring.gradle.springio
+
+import io.spring.gradle.springio.IncompleteExcludesTask;
+import io.spring.gradle.springio.SpringIoPlugin;
 
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -9,8 +12,6 @@ import org.gradle.api.internal.artifacts.DefaultModuleVersionSelector
 import org.gradle.api.internal.artifacts.ivyservice.DefaultDependencyResolveDetails
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.testfixtures.ProjectBuilder
-import org.springframework.build.gradle.springio.IncompleteExcludesTask;
-import org.springframework.build.gradle.springio.SpringIoPlugin;
 
 import spock.lang.Specification
 

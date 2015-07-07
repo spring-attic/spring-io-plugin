@@ -4,7 +4,7 @@ buildscript {
 		maven { url 'https://repo.spring.io/plugins-release' }
 	}
 	dependencies {
-		classpath 'org.springframework.build.gradle:spring-io-plugin:0.0.3.BUILD-SNAPSHOT'
+		classpath 'io.spring.gradle:spring-io-plugin:0.0.4.BUILD-SNAPSHOT'
 	}
 }
 
