@@ -1,70 +1,21 @@
-buildscript {
-    repositories {
-        maven { url 'https://repo.spring.io/plugins-release' }
-    }
-    dependencies {
-        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:2.2.2'
-    }
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'groovy'
+apply plugin: 'maven'
+
+group = 'org.springframework.build.gradle'
+
+repositories {
+    mavenCentral()
 }
 
-allprojects {
-    apply plugin: 'idea'
-    apply plugin: 'eclipse'
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
 }
 
-subprojects {
-    apply plugin: 'groovy'
-    apply plugin: 'maven'
-    apply plugin: 'artifactory'
-
-    group = 'org.springframework.build.gradle'
-
-    repositories {
-        maven { url 'https://repo.spring.io/libs-release' }
-    }
-
-    dependencies {
-        compile gradleApi()
-        compile localGroovy()
-    }
-}
-
-project(':spring-io-plugin') {
-    version = springIoPluginVersion
-
-    dependencies {
-        testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
-    }
-}
-
-project(':bundlor-plugin') {
-    version = bundlorPluginVersion
-    // dependencies are configured within BundlorPlugin
-}
-
-ext.repoUser = project.properties['REPO_USERNAME']
-ext.repoPass = project.properties['REPO_PASSWORD']
-
-artifactory {
-    contextUrl = 'https://repo.spring.io'
-    publish {
-        repository {
-            repoKey = 'plugins-snapshot-local'
-            username = repoUser
-            password = repoPass
-        }
-        defaults {
-            publishConfigs('archives')
-        }
-    }
-    resolve {
-        repository {
-            repoKey = 'libs-releases'
-            username = repoUser
-            password = repoPass
-            maven = true
-        }
-    }
+dependencies {
+    testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
 }
 
 task wrapper(type: Wrapper) {
