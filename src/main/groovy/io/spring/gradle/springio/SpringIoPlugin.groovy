@@ -33,7 +33,7 @@ class SpringIoPlugin implements Plugin<Project> {
 		}
 
 		DependencyManagementExtension dependencyManagement = project.extensions.findByType(DependencyManagementExtension)
-		dependencyManagement.dependenciesOverrideDependencyManagement = false
+		dependencyManagement.overriddenByDependencies = false
 		dependencyManagement.applyMavenExclusions = false
 		dependencyManagement.generatedPomCustomization.enabled = false
 
