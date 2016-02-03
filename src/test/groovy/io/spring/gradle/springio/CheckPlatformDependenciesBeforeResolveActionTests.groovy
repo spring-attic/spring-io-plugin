@@ -35,7 +35,7 @@ class CheckPlatformDependenciesBeforeResolveActionTests extends Specification {
 
 		parent.repositories { maven { url 'src/test/resources/test-maven-repository' } }
 
-		dependencyManagement = ['managedVersions': [:]]
+		dependencyManagement = ['ownManagedVersions': [:]]
 
 		action = new CheckPlatformDependenciesBeforeResolveAction(configuration: config, dependencyManagement: dependencyManagement)
 
@@ -48,7 +48,7 @@ class CheckPlatformDependenciesBeforeResolveActionTests extends Specification {
 		setup:
 			DependencyResolveDetails details = details('a:b:1.0')
 			parent.dependencies {
-				dependencyManagement.managedVersions['a:b'] = '1.5'
+				dependencyManagement.ownManagedVersions['a:b'] = '1.5'
 			}
 			when:
 				action.execute(Mock(ResolvableDependencies))

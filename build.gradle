@@ -6,14 +6,14 @@ apply plugin: 'maven'
 group = 'io.spring.gradle'
 
 repositories {
-	maven { url 'https://repo.spring.io/plugins-release' }
+    maven { url 'https://repo.spring.io/plugins-release' }
     mavenCentral()
 }
 
 dependencies {
     compile gradleApi()
     compile localGroovy()
-    compile 'io.spring.gradle:dependency-management-plugin:0.5.3.RELEASE'
+    compile 'io.spring.gradle:dependency-management-plugin:0.5.5.RELEASE'
 }
 
 dependencies {

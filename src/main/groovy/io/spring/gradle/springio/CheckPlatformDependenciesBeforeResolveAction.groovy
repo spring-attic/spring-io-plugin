@@ -56,7 +56,7 @@ class CheckPlatformDependenciesBeforeResolveAction implements Action<ResolvableD
 
 		void execute(DependencyResolveDetails details) {
 			ModuleVersionSelector requested = details.requested
-			Map managedVersions = dependencyManagement.managedVersions
+			Map managedVersions = dependencyManagement.ownManagedVersions
 			String id = "${details.requested.group}:${details.requested.name}"
 			if (!managedVersions[id]) {
 				if (isDirectDependency(requested)) {
