@@ -1,12 +1,11 @@
 apply plugin: 'idea'
 apply plugin: 'eclipse'
-apply plugin: 'groovy'
+apply plugin: 'java'
 apply plugin: 'maven'
 
 group = 'io.spring.gradle'
 
 repositories {
-    maven { url 'https://repo.spring.io/plugins-release' }
     mavenCentral()
 }
 
@@ -14,10 +13,9 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
     compile 'io.spring.gradle:dependency-management-plugin:0.5.5.RELEASE'
-}
-
-dependencies {
-    testCompile 'org.spockframework:spock-core:0.7-groovy-1.8'
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile 'org.assertj:assertj-core:2.5.0'
 }
 
 task wrapper(type: Wrapper) {
