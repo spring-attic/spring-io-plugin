@@ -14,7 +14,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.testing.Test;
 
 import java.io.File;
-import java.util.Arrays;
 
 /**
  * @author Rob Winch
@@ -63,13 +62,14 @@ public class SpringIoPlugin implements Plugin<Project> {
 		final SourceSetContainer sourceSets = project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets();
 		SourceSet springIoTestSourceSet = sourceSets.create("springIoTest", new Action<SourceSet>() {
 			@Override
-			public void execute(SourceSet sourceSet) {
-				sourceSet.setCompileClasspath(project.files(sourceSets.getByName("main").getOutput(),
+			public void execute(SourceSet springIoTestSourceSet) {
+				SourceSet testSourceSet = sourceSets.findByName("test");
+				springIoTestSourceSet.setCompileClasspath(project.files(sourceSets.getByName("main").getOutput(),
 						springIoTestRuntimeConfiguration));
-				sourceSet.setRuntimeClasspath(project.files(sourceSets.getByName("main").getOutput(),
-						sourceSet.getOutput(), springIoTestRuntimeConfiguration));
-				sourceSet.getJava().setSrcDirs(Arrays.asList("src/test/java"));
-				sourceSet.getResources().setSrcDirs(Arrays.asList("src/test/resources"));
+				springIoTestSourceSet.setRuntimeClasspath(project.files(sourceSets.getByName("main").getOutput(),
+						springIoTestSourceSet.getOutput(), springIoTestRuntimeConfiguration));
+				springIoTestSourceSet.getJava().setSrcDirs(testSourceSet.getJava().getSrcDirs());
+				springIoTestSourceSet.getResources().setSrcDirs(testSourceSet.getResources().getSrcDirs());
 			}
 		});
 

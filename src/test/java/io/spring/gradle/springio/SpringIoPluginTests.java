@@ -10,6 +10,7 @@ import org.gradle.api.plugins.GroovyPlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -201,6 +202,30 @@ public class SpringIoPluginTests {
 				new File(project.getProjectDir(), "src/test/java"));
 		assertThat(springIoTestSourceSet.getResources().getSrcDirs()).containsExactly(
 				new File(project.getProjectDir(), "src/test/resources"));
+		assertThat(springIoTestSourceSet.getCompileClasspath().getFiles()).containsExactly(
+				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"));
+		assertThat(springIoTestSourceSet.getRuntimeClasspath().getFiles()).containsExactly(
+				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"),
+				new File(project.getBuildDir(), "classes/springIoTest"),
+				new File(project.getBuildDir(), "resources/springIoTest"));
+	}
+
+	@Test
+	public void testSourceSetsSrcDirsAreUsedForSpringIoTestSourceSet() {
+		applyPlugin(JavaPlugin.class);
+		SourceSetContainer sourceSets = this.project.getConvention().getPlugin(JavaPluginConvention.class)
+				.getSourceSets();
+		sourceSets.getByName("test").getJava().srcDir("custom/java");
+		sourceSets.getByName("test").getResources().srcDir("custom/resources");
+		applyPlugin(SpringIoPlugin.class);
+		SourceSet springIoTestSourceSet = sourceSets.getByName("springIoTest");
+		assertThat(springIoTestSourceSet).isNotNull();
+		assertThat(springIoTestSourceSet.getJava().getSrcDirs()).containsExactly(
+				new File(project.getProjectDir(), "src/test/java"),
+				new File(project.getProjectDir(), "custom/java"));
+		assertThat(springIoTestSourceSet.getResources().getSrcDirs()).containsExactly(
+				new File(project.getProjectDir(), "src/test/resources"),
+				new File(project.getProjectDir(), "custom/resources"));
 		assertThat(springIoTestSourceSet.getCompileClasspath().getFiles()).containsExactly(
 				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"));
 		assertThat(springIoTestSourceSet.getRuntimeClasspath().getFiles()).containsExactly(
