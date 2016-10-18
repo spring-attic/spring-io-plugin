@@ -115,6 +115,10 @@ public class SpringIoPluginTests {
 		assertThat(springIoJdk7Test).isNotNull();
 		assertThat(springIoJdk7Test.getExecutable()).isEqualTo(this.java7.getAbsolutePath());
 		assertThat(springIoJdk7Test).has(correctClasspath());
+		assertThat(springIoJdk7Test.getReports().getJunitXml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "/spring-io-jdk7-test-results"));
+		assertThat(springIoJdk7Test.getReports().getHtml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "reports/spring-io-jdk7-tests"));
 		assertThat(this.project.getTasks().findByName("springIoJdk8Test")).isNull();
 	}
 
@@ -129,6 +133,10 @@ public class SpringIoPluginTests {
 		assertThat(springIoJdk8Test).isNotNull();
 		assertThat(springIoJdk8Test.getExecutable()).isEqualTo(this.java8.getAbsolutePath());
 		assertThat(springIoJdk8Test).has(correctClasspath());
+		assertThat(springIoJdk8Test.getReports().getJunitXml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "/spring-io-jdk8-test-results"));
+		assertThat(springIoJdk8Test.getReports().getHtml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "reports/spring-io-jdk8-tests"));
 		assertThat(this.project.getTasks().findByName("springIoJdk7Test")).isNull();
 	}
 
@@ -144,11 +152,18 @@ public class SpringIoPluginTests {
 		assertThat(springIoJdk7Test).isNotNull();
 		assertThat(springIoJdk7Test.getExecutable()).isEqualTo(this.java7.getAbsolutePath());
 		assertThat(springIoJdk7Test).has(correctClasspath());
+		assertThat(springIoJdk7Test.getReports().getJunitXml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "/spring-io-jdk7-test-results"));
 		org.gradle.api.tasks.testing.Test springIoJdk8Test =
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk8Test");
 		assertThat(springIoJdk8Test).isNotNull();
 		assertThat(springIoJdk8Test.getExecutable()).isEqualTo(this.java8.getAbsolutePath());
 		assertThat(springIoJdk8Test).has(correctClasspath());
+		assertThat(springIoJdk8Test.getReports().getJunitXml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "/spring-io-jdk8-test-results"));
+		assertThat(springIoJdk8Test.getReports().getHtml().getDestination())
+				.isEqualTo(new File(this.project.getBuildDir(), "reports/spring-io-jdk8-tests"));
+
 	}
 
 	@Test

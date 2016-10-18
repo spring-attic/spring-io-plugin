@@ -111,7 +111,7 @@ public class SpringIoPlugin implements Plugin<Project> {
 				test.setClasspath(springIoTestSourceSet.getRuntimeClasspath());
 				test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
 				test.getReports().getHtml().setDestination(project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-tests"));
-				test.getReports().getJunitXml().setDestination(project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-test-results"));
+				test.getReports().getJunitXml().setDestination(project.file(project.getBuildDir() + "/spring-io-" + jdk.toLowerCase() + "-test-results"));
 				test.executable(exec);
 			}
 		});
