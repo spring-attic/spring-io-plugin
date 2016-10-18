@@ -1,12 +1,15 @@
 package io.spring.gradle.springio;
 
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
+import org.assertj.core.api.Condition;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.GroovyPlugin;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Before;
 import org.junit.Rule;
@@ -15,6 +18,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 public class SpringIoPluginTests {
 
-	private final Project project = ProjectBuilder.builder().build();
+	private Project project;
 
 	@Rule
 	public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -53,6 +57,8 @@ public class SpringIoPluginTests {
 		this.java8 = new File(jdk8Home, "bin/java");
 		this.java8.getParentFile().mkdirs();
 		this.java8.createNewFile();
+
+		this.project = ProjectBuilder.builder().withProjectDir(this.tempFolder.newFolder()).build();
 	}
 
 	@Test
@@ -107,6 +113,7 @@ public class SpringIoPluginTests {
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk7Test");
 		assertThat(springIoJdk7Test).isNotNull();
 		assertThat(springIoJdk7Test.getExecutable()).isEqualTo(this.java7.getAbsolutePath());
+		assertThat(springIoJdk7Test).has(correctClasspath());
 		assertThat(this.project.getTasks().findByName("springIoJdk8Test")).isNull();
 	}
 
@@ -120,6 +127,7 @@ public class SpringIoPluginTests {
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk8Test");
 		assertThat(springIoJdk8Test).isNotNull();
 		assertThat(springIoJdk8Test.getExecutable()).isEqualTo(this.java8.getAbsolutePath());
+		assertThat(springIoJdk8Test).has(correctClasspath());
 		assertThat(this.project.getTasks().findByName("springIoJdk7Test")).isNull();
 	}
 
@@ -134,10 +142,12 @@ public class SpringIoPluginTests {
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk7Test");
 		assertThat(springIoJdk7Test).isNotNull();
 		assertThat(springIoJdk7Test.getExecutable()).isEqualTo(this.java7.getAbsolutePath());
+		assertThat(springIoJdk7Test).has(correctClasspath());
 		org.gradle.api.tasks.testing.Test springIoJdk8Test =
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk8Test");
 		assertThat(springIoJdk8Test).isNotNull();
 		assertThat(springIoJdk8Test.getExecutable()).isEqualTo(this.java8.getAbsolutePath());
+		assertThat(springIoJdk8Test).has(correctClasspath());
 	}
 
 	@Test
@@ -180,10 +190,42 @@ public class SpringIoPluginTests {
 		assertThat(new SpringIoPlugin().createRelativeJavaExec(true)).isEqualTo("/bin/java.exe");
 	}
 
+	@Test
+	public void pluginCreatesSpringIoTestSourceSet() {
+		applyPlugin(SpringIoPlugin.class);
+		applyPlugin(JavaPlugin.class);
+		SourceSet springIoTestSourceSet = this.project.getConvention().getPlugin(JavaPluginConvention.class)
+				.getSourceSets().getByName("springIoTest");
+		assertThat(springIoTestSourceSet).isNotNull();
+		assertThat(springIoTestSourceSet.getJava().getSrcDirs()).containsExactly(
+				new File(project.getProjectDir(), "src/test/java"));
+		assertThat(springIoTestSourceSet.getResources().getSrcDirs()).containsExactly(
+				new File(project.getProjectDir(), "src/test/resources"));
+		assertThat(springIoTestSourceSet.getCompileClasspath().getFiles()).containsExactly(
+				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"));
+		assertThat(springIoTestSourceSet.getRuntimeClasspath().getFiles()).containsExactly(
+				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"),
+				new File(project.getBuildDir(), "classes/springIoTest"),
+				new File(project.getBuildDir(), "resources/springIoTest"));
+	}
+
 	private void applyPlugin(Class<?> pluginClass) {
 		Map<String, Object> arguments = new HashMap<String, Object>();
 		arguments.put("plugin", pluginClass);
 		this.project.apply(arguments);
+	}
+
+	private Condition<org.gradle.api.tasks.testing.Test> correctClasspath() {
+		return new Condition<org.gradle.api.tasks.testing.Test>() {
+			@Override
+			public boolean matches(org.gradle.api.tasks.testing.Test value) {
+				return value.getClasspath().getFiles().containsAll(Arrays.asList(
+						new File(project.getBuildDir(), "classes/main"),
+						new File(project.getBuildDir(), "resources/main"),
+						new File(project.getBuildDir(), "classes/springIoTest"),
+						new File(project.getBuildDir(), "resources/springIoTest")));
+			}
+		};
 	}
 
 }

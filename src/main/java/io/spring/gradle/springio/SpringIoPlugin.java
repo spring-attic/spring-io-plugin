@@ -8,10 +8,13 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.testing.Test;
 
 import java.io.File;
+import java.util.Arrays;
 
 /**
  * @author Rob Winch
@@ -49,7 +52,7 @@ public class SpringIoPlugin implements Plugin<Project> {
 		dependencyManagement.setApplyMavenExclusions(false);
 		dependencyManagement.getGeneratedPomCustomization().setEnabled(false);
 
-		Configuration springIoTestRuntimeConfiguration = project.getConfigurations().create("springIoTestRuntime", new Action<Configuration>() {
+		final Configuration springIoTestRuntimeConfiguration = project.getConfigurations().create("springIoTestRuntime", new Action<Configuration>() {
 			@Override
 			public void execute(Configuration springIoTestRuntimeConfiguration) {
 				springIoTestRuntimeConfiguration.extendsFrom(project.getConfigurations().getByName("testRuntime"));
@@ -57,8 +60,21 @@ public class SpringIoPlugin implements Plugin<Project> {
 		});
 
 		final Task springIoTest = project.getTasks().create(TEST_TASK_NAME);
-		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk7", springIoTest);
-		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk8", springIoTest);
+		final SourceSetContainer sourceSets = project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets();
+		SourceSet springIoTestSourceSet = sourceSets.create("springIoTest", new Action<SourceSet>() {
+			@Override
+			public void execute(SourceSet sourceSet) {
+				sourceSet.setCompileClasspath(project.files(sourceSets.getByName("main").getOutput(),
+						springIoTestRuntimeConfiguration));
+				sourceSet.setRuntimeClasspath(project.files(sourceSets.getByName("main").getOutput(),
+						sourceSet.getOutput(), springIoTestRuntimeConfiguration));
+				sourceSet.getJava().setSrcDirs(Arrays.asList("src/test/java"));
+				sourceSet.getResources().setSrcDirs(Arrays.asList("src/test/resources"));
+			}
+		});
+
+		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk7", springIoTest, springIoTestSourceSet);
+		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk8", springIoTest, springIoTestSourceSet);
 
 		final Task incompleteExcludesCheck = project.getTasks().create(INCOMPLETE_EXCLUDES_TASK_NAME, IncompleteExcludesTask.class);
 		final Task alternativeDependenciesCheck = project.getTasks().create(ALTERNATIVE_DEPENDENCIES_TASK_NAME, AlternativeDependenciesTask.class);
@@ -76,7 +92,8 @@ public class SpringIoPlugin implements Plugin<Project> {
 		});
 	}
 
-	private void maybeCreateJdkTest(final Project project, final Configuration springioTestRuntimeConfig, final String jdk, Task springIoTest) {
+	private void maybeCreateJdkTest(final Project project, final Configuration springioTestRuntimeConfig,
+			final String jdk, Task springIoTest, final SourceSet springIoTestSourceSet) {
 		final String whichJdk = jdk.toUpperCase() + "_HOME";
 		if (!project.hasProperty(whichJdk)) {
 			return;
@@ -91,8 +108,8 @@ public class SpringIoPlugin implements Plugin<Project> {
 		Test springIoJdkTest = project.getTasks().create("springIo" + jdk + "Test", Test.class, new Action<Test>() {
 			@Override
 			public void execute(Test test) {
-				SourceSetContainer sourceSets = (SourceSetContainer) project.getProperties().get("sourceSets");
-				test.setProperty("classpath", sourceSets.getByName("test").getOutput().plus(sourceSets.getByName("main").getOutput()).plus(springioTestRuntimeConfig));
+				test.setClasspath(springIoTestSourceSet.getRuntimeClasspath());
+				test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
 				test.getReports().getHtml().setDestination(project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-tests"));
 				test.getReports().getJunitXml().setDestination(project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-test-results"));
 				test.executable(exec);
