@@ -1,6 +1,7 @@
 package io.spring.gradle.springio;
 
-import io.spring.gradle.dependencymanagement.DependencyManagementExtension;
+import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
+import io.spring.gradle.dependencymanagement.dsl.GeneratedPomCustomizationHandler;
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -49,7 +50,11 @@ public class SpringIoPlugin implements Plugin<Project> {
 		DependencyManagementExtension dependencyManagement = project.getExtensions().findByType(DependencyManagementExtension.class);
 		dependencyManagement.setOverriddenByDependencies(false);
 		dependencyManagement.setApplyMavenExclusions(false);
-		dependencyManagement.getGeneratedPomCustomization().setEnabled(false);
+		dependencyManagement.generatedPomCustomization(new Action<GeneratedPomCustomizationHandler>() {
+			public void execute(GeneratedPomCustomizationHandler handler) {
+				handler.setEnabled(false);
+			}
+		});
 
 		final Configuration springIoTestRuntimeConfiguration = project.getConfigurations().create("springIoTestRuntime", new Action<Configuration>() {
 			@Override
@@ -79,7 +84,7 @@ public class SpringIoPlugin implements Plugin<Project> {
 		final Task incompleteExcludesCheck = project.getTasks().create(INCOMPLETE_EXCLUDES_TASK_NAME, IncompleteExcludesTask.class);
 		final Task alternativeDependenciesCheck = project.getTasks().create(ALTERNATIVE_DEPENDENCIES_TASK_NAME, AlternativeDependenciesTask.class);
 		final DependencyVersionMappingCheckTask dependencyVersionMappingCheck = project.getTasks().create(CHECK_DEPENDENCY_VERSION_MAPPING_TASK_NAME, DependencyVersionMappingCheckTask.class);
-		dependencyVersionMappingCheck.setDependencyManagement(dependencyManagement.forConfiguration("springIoTestRuntime"));
+		dependencyVersionMappingCheck.setManagedVersions(dependencyManagement.getManagedVersionsForConfiguration(springIoTestRuntimeConfiguration));
 
 		project.getTasks().create(CHECK_TASK_NAME, new Action<Task>() {
 			@Override

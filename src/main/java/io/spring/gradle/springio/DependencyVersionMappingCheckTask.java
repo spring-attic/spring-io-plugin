@@ -1,6 +1,6 @@
 package io.spring.gradle.springio;
 
-import io.spring.gradle.dependencymanagement.DependencyManagementHandler;
+import io.spring.gradle.dependencymanagement.dsl.DependencyManagementHandler;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
@@ -8,11 +8,13 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
+import java.util.Map;
+
 public class DependencyVersionMappingCheckTask extends DefaultTask {
 
 	private Configuration configuration;
 
-	private DependencyManagementHandler dependencyManagement;
+	private Map<String, String> managedVersions;
 
 	@Input
 	@Optional
@@ -28,7 +30,7 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 			configuration = getProject().getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
 		}
 		configuration.getIncoming().beforeResolve(new CheckPlatformDependenciesBeforeResolveAction(this.configuration,
-				this.dependencyManagement, this.failOnUnmappedDirectDependency,
+				this.managedVersions, this.failOnUnmappedDirectDependency,
 				this.failOnUnmappedTransitiveDependency));
 		configuration.resolve();
 	}
@@ -41,12 +43,12 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 		this.configuration = configuration;
 	}
 
-	public DependencyManagementHandler getDependencyManagement() {
-		return this.dependencyManagement;
+	public Map<String, String> getManagedVersions() {
+		return this.managedVersions;
 	}
 
-	public void setDependencyManagement(DependencyManagementHandler dependencyManagement) {
-		this.dependencyManagement = dependencyManagement;
+	public void setManagedVersions(Map<String, String> managedVersions) {
+		this.managedVersions = managedVersions;
 	}
 
 	public boolean isFailOnUnmappedDirectDependency() {

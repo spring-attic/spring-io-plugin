@@ -1,6 +1,5 @@
 package io.spring.gradle.springio;
 
-import io.spring.gradle.dependencymanagement.DependencyManagementHandler;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -32,24 +31,20 @@ public class CheckPlatformDependenciesBeforeResolveActionTests {
 
 	private Configuration configuration;
 
-	private DependencyManagementHandler dependencyManagement;
+	private final Map<String, String> managedVersions = new HashMap<String, String>();
 
 	@Before
 	public void setup() {
 		this.project = ProjectBuilder.builder().withName("project").build();
 		this.project.getRepositories().mavenCentral();
 		this.configuration = this.project.getConfigurations().create("configuration");
-		this.dependencyManagement = mock(DependencyManagementHandler.class);
-		given(this.dependencyManagement.getOwnManagedVersions()).willReturn(new HashMap<String, String>());
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void executionSucceedsWithMappedDirectDependency() {
-		((Map<String, String>)this.dependencyManagement.getOwnManagedVersions())
-				.put("commons-logging:commons-logging", "1.2");
+		this.managedVersions.put("commons-logging:commons-logging", "1.2");
 		this.project.getDependencies().add("configuration", "commons-logging:commons-logging:1.2");
-		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.dependencyManagement, true, false)
+		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, true, false)
 				.execute(mock(ResolvableDependencies.class));
 		this.configuration.resolve();
 	}
@@ -59,31 +54,27 @@ public class CheckPlatformDependenciesBeforeResolveActionTests {
 		this.project.getDependencies().add("configuration", "commons-logging:commons-logging");
 		this.thrown.expect(InvalidUserDataException.class);
 		this.thrown.expectMessage("commons-logging");
-		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.dependencyManagement, true, false)
+		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, true, false)
 				.execute(mock(ResolvableDependencies.class));
 		this.configuration.resolve();
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void executionSucceedsWithUnmappedTransitiveDependency() {
-		((Map<String, String>)this.dependencyManagement.getOwnManagedVersions())
-				.put("org.springframework:spring-core", "4.3.3.RELEASE");
+		this.managedVersions.put("org.springframework:spring-core", "4.3.3.RELEASE");
 		this.project.getDependencies().add("configuration", "org.springframework:spring-core:4.3.3.RELEASE");
-		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.dependencyManagement, true, false)
+		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, true, false)
 				.execute(mock(ResolvableDependencies.class));
 		this.configuration.resolve();
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
 	public void executionCanBeConfiguredToFailWithUnmappedTransitiveDependency() {
-		((Map<String, String>)this.dependencyManagement.getOwnManagedVersions())
-				.put("org.springframework:spring-core", "4.3.3.RELEASE");
+		this.managedVersions.put("org.springframework:spring-core", "4.3.3.RELEASE");
 		this.project.getDependencies().add("configuration", "org.springframework:spring-core:4.3.3.RELEASE");
 		this.thrown.expect(InvalidUserDataException.class);
 		this.thrown.expectMessage("commons-logging");
-		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.dependencyManagement, true, true)
+		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, true, true)
 				.execute(mock(ResolvableDependencies.class));
 		this.configuration.resolve();
 	}
@@ -91,9 +82,9 @@ public class CheckPlatformDependenciesBeforeResolveActionTests {
 	@Test
 	public void executionCanBeConfiguredToSucceedWithUnmappedDirectDependency() {
 		this.project.getDependencies().add("configuration", "commons-logging:commons-logging:1.2");
-		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.dependencyManagement, false, false)
+		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, false, false)
 				.execute(mock(ResolvableDependencies.class));
 		this.configuration.resolve();
 	}
-	
+
 }

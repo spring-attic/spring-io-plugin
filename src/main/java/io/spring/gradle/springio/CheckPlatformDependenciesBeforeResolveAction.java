@@ -1,6 +1,6 @@
 package io.spring.gradle.springio;
 
-import io.spring.gradle.dependencymanagement.DependencyManagementHandler;
+import io.spring.gradle.dependencymanagement.dsl.DependencyManagementHandler;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.artifacts.*;
@@ -13,24 +13,24 @@ public class CheckPlatformDependenciesBeforeResolveAction implements Action<Reso
 
 	private final Configuration configuration;
 
-	private final DependencyManagementHandler dependencyManagement;
+	private final Map<String, String> managedVersions;
 
 	private final boolean failOnUnmappedDirectDependency;
 
 	private final boolean failOnUnmappedTransitiveDependency;
 
 	CheckPlatformDependenciesBeforeResolveAction(Configuration configuration,
-			DependencyManagementHandler dependencyManagement, boolean failOnUnmappedDirectDependency,
+			Map<String, String> managedVersions, boolean failOnUnmappedDirectDependency,
 			boolean failOnUnmappedTransitiveDependency) {
 		this.configuration = configuration;
-		this.dependencyManagement = dependencyManagement;
+		this.managedVersions = managedVersions;
 		this.failOnUnmappedDirectDependency = failOnUnmappedDirectDependency;
 		this.failOnUnmappedTransitiveDependency = failOnUnmappedTransitiveDependency;
 	}
 
 	@Override
 	public void execute(ResolvableDependencies resolvableDependencies) {
-		final CheckingDependencyResolveDetailsAction action = new CheckingDependencyResolveDetailsAction(configuration, dependencyManagement);
+		final CheckingDependencyResolveDetailsAction action = new CheckingDependencyResolveDetailsAction(configuration, managedVersions);
 		configuration.getResolutionStrategy().eachDependency(action);
 		configuration.getIncoming().afterResolve(new Action<ResolvableDependencies>() {
 			@Override
@@ -61,22 +61,21 @@ public class CheckPlatformDependenciesBeforeResolveAction implements Action<Reso
 
 		private final Configuration configuration;
 
-		private final DependencyManagementHandler dependencyManagement;
+		private final Map<String, String> managedVersions;
 
 		private final List<ModuleVersionSelector> unmappedDirectDependencies = new ArrayList<ModuleVersionSelector>();
 
 		private final List<ModuleVersionSelector> unmappedTransitiveDependencies = new ArrayList<ModuleVersionSelector>();
 
 		CheckingDependencyResolveDetailsAction(Configuration configuration,
-				DependencyManagementHandler dependencyManagement) {
+				Map<String, String> managedVersions) {
 			this.configuration = configuration;
-			this.dependencyManagement = dependencyManagement;
+			this.managedVersions = managedVersions;
 		}
 
 		@SuppressWarnings("unchecked")
 		public void execute(DependencyResolveDetails details) {
 			ModuleVersionSelector requested = details.getRequested();
-			Map<String, String> managedVersions = (Map<String, String>) dependencyManagement.getOwnManagedVersions();
 			String id = details.getRequested().getGroup() + ":" + details.getRequested().getName();
 			if (!managedVersions.containsKey(id)) {
 				if (isDirectDependency(requested)) {
