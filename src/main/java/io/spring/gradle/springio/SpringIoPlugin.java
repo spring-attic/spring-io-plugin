@@ -47,7 +47,7 @@ public class SpringIoPlugin implements Plugin<Project> {
 			project.getPlugins().apply(DependencyManagementPlugin.class);
 		}
 
-		DependencyManagementExtension dependencyManagement = project.getExtensions().findByType(DependencyManagementExtension.class);
+		final DependencyManagementExtension dependencyManagement = project.getExtensions().findByType(DependencyManagementExtension.class);
 		dependencyManagement.setOverriddenByDependencies(false);
 		dependencyManagement.setApplyMavenExclusions(false);
 		dependencyManagement.generatedPomCustomization(new Action<GeneratedPomCustomizationHandler>() {
@@ -84,7 +84,13 @@ public class SpringIoPlugin implements Plugin<Project> {
 		final Task incompleteExcludesCheck = project.getTasks().create(INCOMPLETE_EXCLUDES_TASK_NAME, IncompleteExcludesTask.class);
 		final Task alternativeDependenciesCheck = project.getTasks().create(ALTERNATIVE_DEPENDENCIES_TASK_NAME, AlternativeDependenciesTask.class);
 		final DependencyVersionMappingCheckTask dependencyVersionMappingCheck = project.getTasks().create(CHECK_DEPENDENCY_VERSION_MAPPING_TASK_NAME, DependencyVersionMappingCheckTask.class);
-		dependencyVersionMappingCheck.setManagedVersions(dependencyManagement.getManagedVersionsForConfiguration(springIoTestRuntimeConfiguration));
+
+		project.afterEvaluate(new Action<Project>() {
+			@Override
+			public void execute(Project project) {
+				dependencyVersionMappingCheck.setManagedVersions(dependencyManagement.getManagedVersionsForConfiguration(springIoTestRuntimeConfiguration));
+			}
+		});
 
 		project.getTasks().create(CHECK_TASK_NAME, new Action<Task>() {
 			@Override
