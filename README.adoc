@@ -21,10 +21,10 @@ the latest available version. Then configure the plugin in your project as follo
 ----
 buildscript {
     repositories {
-        maven { url 'https://repo.spring.io/plugins-snapshot' }
+        maven { url 'https://repo.spring.io/plugins-release' }
     }
     dependencies {
-        classpath 'io.spring.gradle:spring-io-plugin:0.0.4.BUILD-SNAPSHOT'
+        classpath 'io.spring.gradle:spring-io-plugin:0.0.6.RELEASE
     }
 }
 
@@ -39,8 +39,12 @@ configure(allprojects) {
            maven { url "https://repo.spring.io/libs-snapshot" }
         }
 
-        dependencies {
-            springIoVersions "io.spring.platform:platform-versions:${platformVersion}@properties"
+        dependencyManagement {
+            springIoTestRuntime {
+                imports {
+                    mavenBom "io.spring.platform:platform-bom:${platformVersion}"
+                }
+            }
         }
     }
 }
@@ -108,14 +112,17 @@ Typically users will keep the springIoCheck task separate so as to only run the 
 
 The plugin creates a new configuration, `springIoTestRuntime`, that contains all of the project's dependencies with
 their versions mapped to those that are in the Platform. This configuration is used when running the additional
-tests. The plugin uses another new configuration, `springIoVersions` to determine the versions. Typically, when
-configuring this configuration you will declare a single dependency upon `platform-versions` using a property to
-control the version. For example:
+tests. The versions in this configuration are managed via the dependency management plugin that is configured to
+import the Platform's bom. For example:
 
 [source,groovy]
 ----
-dependencies {
-    springIoVersions 'io.spring.platform:platform-versions:${platformVersion}@properties'
+dependencyManagement {
+    springIoTestRuntime {
+        imports {
+            mavenBom "io.spring.platform:platform-bom:${platformVersion}"
+        }
+    }
 }
 ----
 
@@ -133,47 +140,19 @@ $ ./gradlew clean project-name:dependencies --configuration springIoTestRuntime
 
 === Overriding versions
 
-To override versions you can declare more than one dependency in the `springIoVersions` configuration. In the event
-of a version being declared in more than one of the dependencies, the last declaration wins. You _must_ use a
-repository as the source for a second or subsequent dependency. This is due to Gradle's handling of
-http://www.gradle.org/docs/current/userguide/dependency_management.html#sub:file_dependencies[direct file
-dependencies] which are always processed first irrespective of the position in which they were declared. If you
-wish to use a local file, you can do so by using a local Maven repository or a flat directory repository.
-
-Using the following file structure:
-
-```
-├── local-repository
-│   └── com
-│       └── example
-│           └── custom-versions
-|               └── 1.0.0
-|                   └── custom-versions-1.0.0.properties
-└── flat-repository
-    └── flat-repository-versions.properties
-```
-
-You can reference the local versions properties files with the following Gradle configuration:
+To override versions you can declare additional dependency management, or override a property when importing
+the Platform's bom. For example:
 
 [source,groovy]
 ----
-repositories {
-
-    …
-
-    maven {
-        url 'local-repository'
+dependencyManagement {
+    springIoTestRuntime {
+        imports {
+            mavenBom("io.spring.platform:platform-bom:${springIoVersion}") {
+                bomProperty "mockito.version", "1.10.9"
+            }
+        }
     }
-
-    flatDir {
-        dirs 'flat-repository'
-    }
-}
-
-dependencies {
-    springIoVersions 'io.spring.platform:platform-versions:1.0.0.BUILD-SNAPSHOT@properties'
-    springIoVersions 'com.example:custom-versions:1.0.0@properies'
-    springIoVersions ':flat-repository-versions@properties' // No group or version is needed
 }
 ----
 
