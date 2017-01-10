@@ -65,9 +65,12 @@ public class SpringIoPlugin implements Plugin<Project> {
 
 		final Task springIoTest = project.getTasks().create(TEST_TASK_NAME);
 		final SourceSetContainer sourceSets = project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets();
-		SourceSet springIoTestSourceSet = sourceSets.create("springIoTest", new Action<SourceSet>() {
+		final SourceSet springIoTestSourceSet = sourceSets.create("springIoTest");
+
+		project.afterEvaluate(new Action<Project>() {
+
 			@Override
-			public void execute(SourceSet springIoTestSourceSet) {
+			public void execute(Project project) {
 				SourceSet testSourceSet = sourceSets.findByName("test");
 				springIoTestSourceSet.setCompileClasspath(project.files(sourceSets.getByName("main").getOutput(),
 						springIoTestRuntimeConfiguration));
@@ -76,6 +79,7 @@ public class SpringIoPlugin implements Plugin<Project> {
 				springIoTestSourceSet.getJava().setSrcDirs(testSourceSet.getJava().getSrcDirs());
 				springIoTestSourceSet.getResources().setSrcDirs(testSourceSet.getResources().getSrcDirs());
 			}
+
 		});
 
 		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk7", springIoTest, springIoTestSourceSet);
@@ -116,17 +120,25 @@ public class SpringIoPlugin implements Plugin<Project> {
 			throw new IllegalStateException("The path " + String.valueOf(exec) + " does not exist! Please provide a valid JDK home as a command-line argument using -P" + whichJdk + "=<path>");
 		}
 
-		Test springIoJdkTest = project.getTasks().create("springIo" + jdk + "Test", Test.class, new Action<Test>() {
+		final Test springIoJdkTest = project.getTasks().create("springIo" + jdk + "Test", Test.class, new Action<Test>() {
 			@Override
 			public void execute(Test test) {
-				test.setClasspath(springIoTestSourceSet.getRuntimeClasspath());
-				test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
 				test.getReports().getHtml().setDestination(project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-tests"));
 				test.getReports().getJunitXml().setDestination(project.file(project.getBuildDir() + "/spring-io-" + jdk.toLowerCase() + "-test-results"));
+				test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
 				test.executable(exec);
 			}
 		});
 		springIoTest.dependsOn(springIoJdkTest);
+		project.afterEvaluate(new Action<Project>() {
+
+			@Override
+			public void execute(Project project) {
+				springIoJdkTest.setClasspath(springIoTestSourceSet.getRuntimeClasspath());
+
+			}
+
+		});
 	}
 
 	String createRelativeJavaExec(boolean isWindows) {

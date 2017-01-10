@@ -5,6 +5,7 @@ import org.assertj.core.api.Condition;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.internal.project.DefaultProject;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.GroovyPlugin;
 import org.gradle.api.plugins.JavaPlugin;
@@ -110,6 +111,7 @@ public class SpringIoPluginTests {
 		ext.set("JDK7_HOME", this.jdk7Home);
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
+		((DefaultProject)project).evaluate();
 		org.gradle.api.tasks.testing.Test springIoJdk7Test =
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk7Test");
 		assertThat(springIoJdk7Test).isNotNull();
@@ -128,6 +130,7 @@ public class SpringIoPluginTests {
 		ext.set("JDK8_HOME", this.jdk8Home);
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
+		((DefaultProject)project).evaluate();
 		org.gradle.api.tasks.testing.Test springIoJdk8Test =
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk8Test");
 		assertThat(springIoJdk8Test).isNotNull();
@@ -147,6 +150,7 @@ public class SpringIoPluginTests {
 		ext.set("JDK8_HOME", this.jdk8Home);
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
+		((DefaultProject)project).evaluate();
 		org.gradle.api.tasks.testing.Test springIoJdk7Test =
 				(org.gradle.api.tasks.testing.Test) this.project.getTasks().findByName("springIoJdk7Test");
 		assertThat(springIoJdk7Test).isNotNull();
@@ -210,6 +214,7 @@ public class SpringIoPluginTests {
 	public void pluginCreatesSpringIoTestSourceSet() {
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
+		((DefaultProject)project).evaluate();
 		SourceSet springIoTestSourceSet = this.project.getConvention().getPlugin(JavaPluginConvention.class)
 				.getSourceSets().getByName("springIoTest");
 		assertThat(springIoTestSourceSet).isNotNull();
@@ -233,6 +238,7 @@ public class SpringIoPluginTests {
 		sourceSets.getByName("test").getJava().srcDir("custom/java");
 		sourceSets.getByName("test").getResources().srcDir("custom/resources");
 		applyPlugin(SpringIoPlugin.class);
+		((DefaultProject)project).evaluate();
 		SourceSet springIoTestSourceSet = sourceSets.getByName("springIoTest");
 		assertThat(springIoTestSourceSet).isNotNull();
 		assertThat(springIoTestSourceSet.getJava().getSrcDirs()).containsExactly(
