@@ -1,6 +1,7 @@
 package io.spring.gradle.springio;
 
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
+import io.spring.gradle.propdeps.PropDepsPlugin;
 import org.assertj.core.api.Condition;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -253,6 +254,24 @@ public class SpringIoPluginTests {
 				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"),
 				new File(project.getBuildDir(), "classes/springIoTest"),
 				new File(project.getBuildDir(), "resources/springIoTest"));
+	}
+
+	@Test
+	public void whenPropdepsPluginIsAppliedSpringIoTestRuntimeExtendsProvidedConfiguration() {
+		applyPlugin(JavaPlugin.class);
+		applyPlugin(SpringIoPlugin.class);
+		applyPlugin(PropDepsPlugin.class);
+		assertThat(project.getConfigurations().getByName("springIoTestRuntime").getExtendsFrom())
+				.contains(project.getConfigurations().getByName("provided"));
+	}
+
+	@Test
+	public void whenPropdepsPluginIsAppliedSpringIoTestRuntimeExtendsOptionalConfiguration() {
+		applyPlugin(JavaPlugin.class);
+		applyPlugin(SpringIoPlugin.class);
+		applyPlugin(PropDepsPlugin.class);
+		assertThat(project.getConfigurations().getByName("springIoTestRuntime").getExtendsFrom())
+				.contains(project.getConfigurations().getByName("optional"));
 	}
 
 	private void applyPlugin(Class<?> pluginClass) {

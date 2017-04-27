@@ -3,6 +3,7 @@ package io.spring.gradle.springio;
 import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
 import io.spring.gradle.dependencymanagement.dsl.GeneratedPomCustomizationHandler;
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
+import io.spring.gradle.propdeps.PropDepsPlugin;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -61,6 +62,16 @@ public class SpringIoPlugin implements Plugin<Project> {
 			public void execute(Configuration springIoTestRuntimeConfiguration) {
 				springIoTestRuntimeConfiguration.extendsFrom(project.getConfigurations().getByName("testRuntime"));
 			}
+		});
+
+		project.getPlugins().withType(PropDepsPlugin.class, new Action<PropDepsPlugin>() {
+
+			@Override
+			public void execute(PropDepsPlugin propDepsPlugin) {
+				springIoTestRuntimeConfiguration.extendsFrom(project.getConfigurations().getByName("optional"));
+				springIoTestRuntimeConfiguration.extendsFrom(project.getConfigurations().getByName("provided"));
+			}
+
 		});
 
 		final Task springIoTest = project.getTasks().create(TEST_TASK_NAME);
