@@ -1,8 +1,7 @@
 package io.spring.gradle.springio;
 
-import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
-import io.spring.gradle.dependencymanagement.dsl.GeneratedPomCustomizationHandler;
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
+import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
 import io.spring.gradle.propdeps.PropDepsPlugin;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -51,11 +50,6 @@ public class SpringIoPlugin implements Plugin<Project> {
 		final DependencyManagementExtension dependencyManagement = project.getExtensions().findByType(DependencyManagementExtension.class);
 		dependencyManagement.setOverriddenByDependencies(false);
 		dependencyManagement.setApplyMavenExclusions(false);
-		dependencyManagement.generatedPomCustomization(new Action<GeneratedPomCustomizationHandler>() {
-			public void execute(GeneratedPomCustomizationHandler handler) {
-				handler.setEnabled(false);
-			}
-		});
 
 		final Configuration springIoTestRuntimeConfiguration = project.getConfigurations().create("springIoTestRuntime", new Action<Configuration>() {
 			@Override
