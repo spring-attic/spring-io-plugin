@@ -10,6 +10,9 @@ repositories {
     maven { url 'https://repo.spring.io/plugins-release' }
 }
 
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
+
 dependencies {
     compile gradleApi()
     compile localGroovy()
