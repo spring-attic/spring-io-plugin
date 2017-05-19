@@ -13,7 +13,6 @@ import org.junit.rules.ExpectedException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -46,6 +45,17 @@ public class CheckPlatformDependenciesBeforeResolveActionTests {
 		this.project.getDependencies().add("configuration", "commons-logging:commons-logging:1.2");
 		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, true, false)
 				.execute(mock(ResolvableDependencies.class));
+		this.configuration.resolve();
+	}
+
+	@Test
+	public void selfResolvingDependenciesAreHandledCorrectlyWhenExaminingUnmappedDependency() {
+		this.project.getDependencies().add("configuration", this.project.files("foo.jar"));
+		this.project.getDependencies().add("configuration", "commons-logging:commons-logging:1.2");
+		new CheckPlatformDependenciesBeforeResolveAction(this.configuration, this.managedVersions, true, false)
+				.execute(mock(ResolvableDependencies.class));
+		this.thrown.expect(InvalidUserDataException.class);
+		this.thrown.expectMessage("commons-logging");
 		this.configuration.resolve();
 	}
 

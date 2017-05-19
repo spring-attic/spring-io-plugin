@@ -1,6 +1,5 @@
 package io.spring.gradle.springio;
 
-import io.spring.gradle.dependencymanagement.dsl.DependencyManagementHandler;
 import org.gradle.api.Action;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.artifacts.*;
@@ -89,7 +88,9 @@ public class CheckPlatformDependenciesBeforeResolveAction implements Action<Reso
 
 		private boolean isDirectDependency(ModuleVersionSelector selector) {
 			for (Dependency dependency : configuration.getAllDependencies()) {
-				if (dependency.getGroup().equals(selector.getGroup()) && dependency.getName().equals(selector.getName())) {
+				if (dependency instanceof ExternalModuleDependency &&
+						dependency.getGroup().equals(selector.getGroup()) &&
+						dependency.getName().equals(selector.getName())) {
 					return true;
 				}
 			}
