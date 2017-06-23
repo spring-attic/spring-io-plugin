@@ -224,10 +224,10 @@ public class SpringIoPluginTests {
 		assertThat(springIoTestSourceSet.getResources().getSrcDirs()).containsExactly(
 				new File(project.getProjectDir(), "src/test/resources"));
 		assertThat(springIoTestSourceSet.getCompileClasspath().getFiles()).containsExactly(
-				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"));
+				new File(project.getBuildDir(), "classes/java/main"), new File(project.getBuildDir(), "resources/main"));
 		assertThat(springIoTestSourceSet.getRuntimeClasspath().getFiles()).containsExactly(
-				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"),
-				new File(project.getBuildDir(), "classes/springIoTest"),
+				new File(project.getBuildDir(), "classes/java/main"), new File(project.getBuildDir(), "resources/main"),
+				new File(project.getBuildDir(), "classes/java/springIoTest"),
 				new File(project.getBuildDir(), "resources/springIoTest"));
 	}
 
@@ -249,10 +249,10 @@ public class SpringIoPluginTests {
 				new File(project.getProjectDir(), "src/test/resources"),
 				new File(project.getProjectDir(), "custom/resources"));
 		assertThat(springIoTestSourceSet.getCompileClasspath().getFiles()).containsExactly(
-				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"));
+				new File(project.getBuildDir(), "classes/java/main"), new File(project.getBuildDir(), "resources/main"));
 		assertThat(springIoTestSourceSet.getRuntimeClasspath().getFiles()).containsExactly(
-				new File(project.getBuildDir(), "classes/main"), new File(project.getBuildDir(), "resources/main"),
-				new File(project.getBuildDir(), "classes/springIoTest"),
+				new File(project.getBuildDir(), "classes/java/main"), new File(project.getBuildDir(), "resources/main"),
+				new File(project.getBuildDir(), "classes/java/springIoTest"),
 				new File(project.getBuildDir(), "resources/springIoTest"));
 	}
 
@@ -285,9 +285,9 @@ public class SpringIoPluginTests {
 			@Override
 			public boolean matches(org.gradle.api.tasks.testing.Test value) {
 				return value.getClasspath().getFiles().containsAll(Arrays.asList(
-						new File(project.getBuildDir(), "classes/main"),
+						new File(project.getBuildDir(), "classes/java/main"),
 						new File(project.getBuildDir(), "resources/main"),
-						new File(project.getBuildDir(), "classes/springIoTest"),
+						new File(project.getBuildDir(), "classes/java/springIoTest"),
 						new File(project.getBuildDir(), "resources/springIoTest")));
 			}
 		};

@@ -12,6 +12,7 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.util.GradleVersion;
 
 import java.io.File;
 
@@ -125,13 +126,25 @@ public class SpringIoPlugin implements Plugin<Project> {
 		}
 
 		final Test springIoJdkTest = project.getTasks().create("springIo" + jdk + "Test", Test.class, new Action<Test>() {
+
+			@SuppressWarnings("deprecation")
 			@Override
 			public void execute(Test test) {
-				test.getReports().getHtml().setDestination(project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-tests"));
-				test.getReports().getJunitXml().setDestination(project.file(project.getBuildDir() + "/spring-io-" + jdk.toLowerCase() + "-test-results"));
-				test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
+				File htmlDestination = project.file(project.getBuildDir() + "/reports/spring-io-" + jdk.toLowerCase() + "-tests");
+				File junitXmlDestination = project.file(project.getBuildDir() + "/spring-io-" + jdk.toLowerCase() + "-test-results");
+				if (GradleVersion.current().compareTo(GradleVersion.version("4.0")) < 0) {
+					test.getReports().getHtml().setDestination((Object)htmlDestination);
+					test.getReports().getJunitXml().setDestination((Object)junitXmlDestination);
+					test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
+				}
+				else {
+					test.getReports().getHtml().setDestination(htmlDestination);
+					test.getReports().getJunitXml().setDestination(junitXmlDestination);
+					test.setTestClassesDirs(springIoTestSourceSet.getOutput().getClassesDirs());
+				}
 				test.executable(exec);
 			}
+
 		});
 		springIoTest.dependsOn(springIoJdkTest);
 		project.afterEvaluate(new Action<Project>() {
