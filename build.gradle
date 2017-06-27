@@ -1,4 +1,4 @@
-apply plugin: 'idea'
+apply plugin: 'checkstyle'
 apply plugin: 'eclipse'
 apply plugin: 'java'
 apply plugin: 'maven'
@@ -6,20 +6,35 @@ apply plugin: 'maven'
 group = 'io.spring.gradle'
 
 repositories {
-    mavenCentral()
-    maven { url 'https://repo.spring.io/plugins-release' }
+	mavenCentral()
+	maven { url 'https://repo.spring.io/plugins-release' }
 }
 
 sourceCompatibility = '1.7'
 targetCompatibility = '1.7'
 
 dependencies {
-    compile gradleApi()
-    compile localGroovy()
-    compile 'io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE'
-    compileOnly 'io.spring.gradle:propdeps-plugin:0.0.8'
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.mockito:mockito-core:1.10.19'
-    testCompile 'org.assertj:assertj-core:2.5.0'
-    testCompile 'io.spring.gradle:propdeps-plugin:0.0.8'
+	compile gradleApi()
+	compile localGroovy()
+	compile 'io.spring.gradle:dependency-management-plugin:1.0.3.RELEASE'
+	compileOnly 'io.spring.gradle:propdeps-plugin:0.0.8'
+	testCompile 'junit:junit:4.12'
+	testCompile 'org.mockito:mockito-core:1.10.19'
+	testCompile 'org.assertj:assertj-core:2.5.0'
+	testCompile 'io.spring.gradle:propdeps-plugin:0.0.8'
+}
+
+checkstyle {
+	configFile = project.file('config/checkstyle/checkstyle.xml')
+	configProperties = [ 'checkstyle.config.dir' : project.file('config/checkstyle') ]
+	toolVersion = '6.10.1'
+}
+
+eclipseJdt {
+	inputFile = project.file('config/eclipse/org.eclipse.jdt.core.prefs')
+	doLast {
+		project.file('.settings/org.eclipse.jdt.ui.prefs').withWriter { writer ->
+			writer << rootProject.file('config/eclipse/org.eclipse.jdt.ui.prefs').text
+		}
+	}
 }
