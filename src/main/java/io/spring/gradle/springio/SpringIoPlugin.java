@@ -17,6 +17,8 @@
 package io.spring.gradle.springio;
 
 import java.io.File;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
 import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
@@ -132,15 +134,26 @@ public class SpringIoPlugin implements Plugin<Project> {
 		final DependencyVersionMappingCheckTask dependencyVersionMappingCheck = project
 				.getTasks().create(CHECK_DEPENDENCY_VERSION_MAPPING_TASK_NAME,
 						DependencyVersionMappingCheckTask.class);
+		dependencyVersionMappingCheck.conventionMapping("configuration",
+				new Callable<Configuration>() {
 
-		project.afterEvaluate(new Action<Project>() {
-			@Override
-			public void execute(Project project) {
-				dependencyVersionMappingCheck.setManagedVersions(
-						dependencyManagement.getManagedVersionsForConfiguration(
-								springIoTestRuntimeConfiguration));
-			}
-		});
+					@Override
+					public Configuration call() throws Exception {
+						return project.getConfigurations()
+								.getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
+					}
+
+				});
+		dependencyVersionMappingCheck.conventionMapping("managedVersions",
+				new Callable<Map<String, String>>() {
+
+					@Override
+					public Map<String, String> call() throws Exception {
+						return dependencyManagement.getManagedVersionsForConfiguration(
+								springIoTestRuntimeConfiguration);
+					}
+
+				});
 
 		project.getTasks().create(CHECK_TASK_NAME, new Action<Task>() {
 			@Override

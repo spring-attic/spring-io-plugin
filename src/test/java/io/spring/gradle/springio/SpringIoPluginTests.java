@@ -240,8 +240,12 @@ public class SpringIoPluginTests {
 	public void pluginCreatesSpringIoDependencyVersionMappingCheckTask() {
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
-		assertThat(this.project.getTasks()
-				.findByName("springIoDependencyVersionMappingCheck")).isNotNull();
+		DependencyVersionMappingCheckTask task = this.project.getTasks()
+				.withType(DependencyVersionMappingCheckTask.class)
+				.findByName("springIoDependencyVersionMappingCheck");
+		assertThat(task).isNotNull();
+		assertThat(task.getConfiguration().getName()).isEqualTo("runtime");
+		assertThat(task.getManagedVersions()).isNotNull();
 	}
 
 	@Test

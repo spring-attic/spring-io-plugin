@@ -1,0 +1,26 @@
+buildscript {
+	dependencies {
+		classpath files(pluginClasspath.split(','))
+	}
+}
+
+configurations {
+	compile
+}
+
+task dependencyVersionMappingCheck(type: io.spring.gradle.springio.DependencyVersionMappingCheckTask) {
+	configuration = configurations.compile
+	managedVersions = project.hasProperty('manageVersions') ? ['org.springframework:spring-core':'4.3.9.RELEASE'] : [:]
+	failOnUnmappedTransitiveDependency = project.hasProperty('failTransitive') ? Boolean.valueOf(project.failTransitive) : false
+	failOnUnmappedDirectDependency = project.hasProperty('failDirect') ? Boolean.valueOf(project.failDirect) : true
+}
+
+repositories {
+	mavenCentral()
+}
+
+if (project.hasProperty('springVersion')) {
+	dependencies {
+		compile "org.springframework:spring-core:$springVersion"
+	}
+}

@@ -1,0 +1,13 @@
+buildscript {
+	dependencies {
+		classpath files(pluginClasspath.split(','))
+	}
+}
+
+configurations {
+	compile
+}
+
+task dependencyVersionMappingCheck(type: io.spring.gradle.springio.DependencyVersionMappingCheckTask) {
+	configuration = configurations.compile
+}

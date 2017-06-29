@@ -16,14 +16,20 @@
 
 package io.spring.gradle.springio;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
-import org.gradle.api.DefaultTask;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.ExternalModuleDependency;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.internal.ConventionTask;
+import org.gradle.api.specs.Specs;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -32,35 +38,58 @@ import org.gradle.api.tasks.TaskAction;
  *
  * @author Andy Wilkinson
  */
-public class DependencyVersionMappingCheckTask extends DefaultTask {
+public class DependencyVersionMappingCheckTask extends ConventionTask {
 
 	private Configuration configuration;
 
 	private Map<String, String> managedVersions;
 
-	@Input
-	@Optional
 	private boolean failOnUnmappedDirectDependency = true;
 
-	@Input
-	@Optional
 	private boolean failOnUnmappedTransitiveDependency = false;
+
+	public DependencyVersionMappingCheckTask() {
+		getOutputs().upToDateWhen(Specs.SATISFIES_ALL);
+	}
 
 	/**
 	 * Performs the dependency versions mapping check.
 	 */
 	@TaskAction
 	public void checkVersionMapping() {
-		if (this.configuration == null) {
-			this.configuration = getProject().getConfigurations()
-					.getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
+		Set<String> unmappedDirectDependencies = new LinkedHashSet<>();
+		Set<String> unmappedTransitiveDependencies = new LinkedHashSet<>();
+		for (ResolvedArtifact resolvedArtifact : this.configuration
+				.getResolvedConfiguration().getResolvedArtifacts()) {
+			ModuleVersionIdentifier module = resolvedArtifact.getModuleVersion().getId();
+			String id = module.getGroup() + ":" + module.getName();
+			if (!this.managedVersions.containsKey(id)) {
+				if (isDirectDependency(module)) {
+					if (this.failOnUnmappedDirectDependency) {
+						unmappedDirectDependencies.add(id);
+					}
+				}
+				else if (this.failOnUnmappedTransitiveDependency) {
+					unmappedTransitiveDependencies.add(id);
+				}
+			}
 		}
-		this.configuration.getIncoming()
-				.beforeResolve(new CheckPlatformDependenciesBeforeResolveAction(
-						this.configuration, this.managedVersions,
-						this.failOnUnmappedDirectDependency,
-						this.failOnUnmappedTransitiveDependency));
-		this.configuration.resolve();
+		String message = "";
+		if (!unmappedDirectDependencies.isEmpty()) {
+			message += "The following direct dependencies do not have Spring IO versions: \n";
+			for (String dependency : unmappedDirectDependencies) {
+				message += "    - " + dependency + "\n";
+			}
+		}
+		if (!unmappedTransitiveDependencies.isEmpty()) {
+			message = "The following transitive dependencies do not have Spring IO versions: \n";
+			for (String dependency : unmappedTransitiveDependencies) {
+				message += "    - " + dependency + "\n";
+			}
+		}
+		if (message.length() > 0) {
+			throw new InvalidUserDataException(message);
+		}
 	}
 
 	/**
@@ -68,6 +97,7 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 	 *
 	 * @return the configuration
 	 */
+	@Input
 	public Configuration getConfiguration() {
 		return this.configuration;
 	}
@@ -87,6 +117,7 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 	 *
 	 * @return the managed versions
 	 */
+	@Input
 	public Map<String, String> getManagedVersions() {
 		return this.managedVersions;
 	}
@@ -107,6 +138,7 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 	 *
 	 * @return {@code true} if the task should fail, {@code false} if it should not
 	 */
+	@Input
 	public boolean isFailOnUnmappedDirectDependency() {
 		return this.failOnUnmappedDirectDependency;
 	}
@@ -129,6 +161,7 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 	 *
 	 * @return {@code true} if the task should fail, {@code false} if it should not
 	 */
+	@Input
 	public boolean isFailOnUnmappedTransitiveDependency() {
 		return this.failOnUnmappedTransitiveDependency;
 	}
@@ -143,6 +176,17 @@ public class DependencyVersionMappingCheckTask extends DefaultTask {
 	public void setFailOnUnmappedTransitiveDependency(
 			boolean failOnUnmappedTransitiveDependency) {
 		this.failOnUnmappedTransitiveDependency = failOnUnmappedTransitiveDependency;
+	}
+
+	private boolean isDirectDependency(ModuleVersionIdentifier module) {
+		for (Dependency dependency : this.configuration.getAllDependencies()) {
+			if (dependency instanceof ExternalModuleDependency
+					&& dependency.getGroup().equals(module.getGroup())
+					&& dependency.getName().equals(module.getName())) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

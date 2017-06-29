@@ -1,0 +1,26 @@
+buildscript {
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+	dependencies {
+		classpath 'io.spring.gradle:spring-io-plugin:0.0.9.BUILD-SNAPSHOT'
+	}
+}
+
+apply plugin: 'java'
+
+task someCheck(type: io.spring.gradle.springio.DependencyVersionMappingCheckTask) {
+	configuration = configurations.runtime
+	managedVersions = [:]
+	failOnUnmappedDirectDependency = false
+	failOnUnmappedTransitiveDependency = true
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	runtime 'org.springframework:spring-core:4.3.9.RELEASE'
+}
