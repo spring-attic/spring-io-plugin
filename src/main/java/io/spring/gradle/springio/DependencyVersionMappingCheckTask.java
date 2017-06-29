@@ -48,6 +48,9 @@ public class DependencyVersionMappingCheckTask extends ConventionTask {
 
 	private boolean failOnUnmappedTransitiveDependency = false;
 
+	/**
+	 * Creates a new {@code DependencyVersionMappingCheckTask}.
+	 */
 	public DependencyVersionMappingCheckTask() {
 		getOutputs().upToDateWhen(Specs.SATISFIES_ALL);
 	}
