@@ -101,7 +101,7 @@ public class GradleBuild implements TestRule {
 	}
 
 	private String pluginClasspath() {
-		return absolutePath("bin") + "," + absolutePath("build/classes/main") + ","
+		return absolutePath("bin") + "," + absolutePath("build/classes/java/main") + ","
 				+ absolutePath("build/resources/main") + ","
 				+ pathOfJarContaining(DependencyManagementPlugin.class);
 	}
@@ -151,6 +151,7 @@ public class GradleBuild implements TestRule {
 		allArguments.add("-PpluginClasspath=" + pluginClasspath());
 		allArguments.add("--stacktrace");
 		allArguments.addAll(Arrays.asList(arguments));
+		System.out.println(allArguments);
 		return gradleRunner.withArguments(allArguments);
 	}
 

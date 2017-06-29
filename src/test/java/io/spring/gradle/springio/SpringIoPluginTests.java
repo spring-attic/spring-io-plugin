@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
 import io.spring.gradle.propdeps.PropDepsPlugin;
@@ -112,13 +113,14 @@ public class SpringIoPluginTests {
 				.isNotNull();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void pluginCreatesTheSpringIoCheckTask() {
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
 		Task task = this.project.getTasks().findByName("springIoCheck");
 		assertThat(task).isNotNull();
-		assertThat(task.getTaskDependencies().getDependencies(task))
+		assertThat((Set<Task>) task.getTaskDependencies().getDependencies(task))
 				.containsExactlyInAnyOrder(
 						this.project.getTasks().findByName("springIoTest"),
 						this.project.getTasks()
@@ -205,6 +207,7 @@ public class SpringIoPluginTests {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test
 	public void pluginCreatesSpringIoTestTask() {
 		ExtraPropertiesExtension ext = (ExtraPropertiesExtension) this.project
@@ -214,8 +217,8 @@ public class SpringIoPluginTests {
 		applyPlugin(SpringIoPlugin.class);
 		applyPlugin(JavaPlugin.class);
 		Task springIoTest = this.project.getTasks().findByName("springIoTest");
-		assertThat(springIoTest.getTaskDependencies().getDependencies(springIoTest))
-				.containsExactlyInAnyOrder(
+		assertThat((Set<Task>) springIoTest.getTaskDependencies()
+				.getDependencies(springIoTest)).containsExactlyInAnyOrder(
 						this.project.getTasks().findByName("springIoJdk7Test"),
 						this.project.getTasks().findByName("springIoJdk8Test"));
 	}

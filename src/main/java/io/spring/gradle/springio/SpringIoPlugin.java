@@ -17,8 +17,6 @@
 package io.spring.gradle.springio;
 
 import java.io.File;
-import java.util.Map;
-import java.util.concurrent.Callable;
 
 import io.spring.gradle.dependencymanagement.DependencyManagementPlugin;
 import io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension;
@@ -65,105 +63,76 @@ public class SpringIoPlugin implements Plugin<Project> {
 	}
 
 	private void applyJavaProject(final Project project) {
+		DependencyManagementExtension dependencyManagement = configureDependencyManagementPlugin(
+				project);
+		Configuration springIoTestRuntimeConfiguration = createSpringIoTestRuntimeConfiguration(
+				project);
+		Task springIoTest = createSpringIoTestTasks(project,
+				springIoTestRuntimeConfiguration);
+		Task incompleteExcludesCheck = project.getTasks()
+				.create(INCOMPLETE_EXCLUDES_TASK_NAME, IncompleteExcludesTask.class);
+		Task alternativeDependenciesCheck = project.getTasks().create(
+				ALTERNATIVE_DEPENDENCIES_TASK_NAME, AlternativeDependenciesTask.class);
+		DependencyVersionMappingCheckTask dependencyVersionMappingCheck = createDependencyVersionMappingCheckTask(
+				project, dependencyManagement, springIoTestRuntimeConfiguration);
+		project.getTasks().create(CHECK_TASK_NAME, (task) -> {
+			task.dependsOn(dependencyVersionMappingCheck);
+			task.dependsOn(springIoTest);
+			task.dependsOn(incompleteExcludesCheck);
+			task.dependsOn(alternativeDependenciesCheck);
+		});
+	}
+
+	private DependencyManagementExtension configureDependencyManagementPlugin(
+			final Project project) {
 		if (project.getPlugins().findPlugin(DependencyManagementPlugin.class) == null) {
 			project.getPlugins().apply(DependencyManagementPlugin.class);
 		}
 
-		final DependencyManagementExtension dependencyManagement = project.getExtensions()
+		DependencyManagementExtension dependencyManagement = project.getExtensions()
 				.findByType(DependencyManagementExtension.class);
 		dependencyManagement.setOverriddenByDependencies(false);
 		dependencyManagement.setApplyMavenExclusions(false);
+		return dependencyManagement;
+	}
 
-		final Configuration springIoTestRuntimeConfiguration = project.getConfigurations()
-				.create("springIoTestRuntime", new Action<Configuration>() {
-
-					@Override
-					public void execute(Configuration springIoTestRuntimeConfiguration) {
-						springIoTestRuntimeConfiguration.extendsFrom(
-								project.getConfigurations().getByName("testRuntime"));
-					}
-
-				});
-
-		project.getPlugins().withId("propdeps", new Action<Plugin>() {
-
-			@Override
-			public void execute(Plugin propDepsPlugin) {
-				springIoTestRuntimeConfiguration
-						.extendsFrom(project.getConfigurations().getByName("optional"));
-				springIoTestRuntimeConfiguration
-						.extendsFrom(project.getConfigurations().getByName("provided"));
-			}
-
+	private Configuration createSpringIoTestRuntimeConfiguration(final Project project) {
+		Configuration springIoTestRuntimeConfiguration = project.getConfigurations()
+				.create("springIoTestRuntime", configuration -> configuration.extendsFrom(
+						project.getConfigurations().getByName("testRuntime")));
+		project.getPlugins().withId("propdeps", plugin -> {
+			springIoTestRuntimeConfiguration
+					.extendsFrom(project.getConfigurations().getByName("optional"));
+			springIoTestRuntimeConfiguration
+					.extendsFrom(project.getConfigurations().getByName("provided"));
 		});
+		return springIoTestRuntimeConfiguration;
+	}
 
-		final Task springIoTest = project.getTasks().create(TEST_TASK_NAME);
-		final SourceSetContainer sourceSets = project.getConvention()
+	private Task createSpringIoTestTasks(final Project project,
+			Configuration springIoTestRuntimeConfiguration) {
+		Task springIoTest = project.getTasks().create(TEST_TASK_NAME);
+		SourceSetContainer sourceSets = project.getConvention()
 				.getPlugin(JavaPluginConvention.class).getSourceSets();
-		final SourceSet springIoTestSourceSet = sourceSets.create("springIoTest");
-
-		project.afterEvaluate(new Action<Project>() {
-
-			@Override
-			public void execute(Project project) {
-				SourceSet testSourceSet = sourceSets.findByName("test");
-				springIoTestSourceSet.setCompileClasspath(
-						project.files(sourceSets.getByName("main").getOutput(),
-								springIoTestRuntimeConfiguration));
-				springIoTestSourceSet.setRuntimeClasspath(
-						project.files(sourceSets.getByName("main").getOutput(),
-								springIoTestSourceSet.getOutput(),
-								springIoTestRuntimeConfiguration));
-				springIoTestSourceSet.getJava()
-						.setSrcDirs(testSourceSet.getJava().getSrcDirs());
-				springIoTestSourceSet.getResources()
-						.setSrcDirs(testSourceSet.getResources().getSrcDirs());
-			}
-
+		SourceSet springIoTestSourceSet = sourceSets.create("springIoTest");
+		project.afterEvaluate(localProject -> {
+			SourceSet testSourceSet = sourceSets.findByName("test");
+			springIoTestSourceSet.setCompileClasspath(
+					project.files(sourceSets.getByName("main").getOutput(),
+							springIoTestRuntimeConfiguration));
+			springIoTestSourceSet.setRuntimeClasspath(project.files(
+					sourceSets.getByName("main").getOutput(),
+					springIoTestSourceSet.getOutput(), springIoTestRuntimeConfiguration));
+			springIoTestSourceSet.getJava()
+					.setSrcDirs(testSourceSet.getJava().getSrcDirs());
+			springIoTestSourceSet.getResources()
+					.setSrcDirs(testSourceSet.getResources().getSrcDirs());
 		});
-
 		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk7",
 				springIoTest, springIoTestSourceSet);
 		maybeCreateJdkTest(project, springIoTestRuntimeConfiguration, "Jdk8",
 				springIoTest, springIoTestSourceSet);
-
-		final Task incompleteExcludesCheck = project.getTasks()
-				.create(INCOMPLETE_EXCLUDES_TASK_NAME, IncompleteExcludesTask.class);
-		final Task alternativeDependenciesCheck = project.getTasks().create(
-				ALTERNATIVE_DEPENDENCIES_TASK_NAME, AlternativeDependenciesTask.class);
-		final DependencyVersionMappingCheckTask dependencyVersionMappingCheck = project
-				.getTasks().create(CHECK_DEPENDENCY_VERSION_MAPPING_TASK_NAME,
-						DependencyVersionMappingCheckTask.class);
-		dependencyVersionMappingCheck.conventionMapping("configuration",
-				new Callable<Configuration>() {
-
-					@Override
-					public Configuration call() throws Exception {
-						return project.getConfigurations()
-								.getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME);
-					}
-
-				});
-		dependencyVersionMappingCheck.conventionMapping("managedVersions",
-				new Callable<Map<String, String>>() {
-
-					@Override
-					public Map<String, String> call() throws Exception {
-						return dependencyManagement.getManagedVersionsForConfiguration(
-								springIoTestRuntimeConfiguration);
-					}
-
-				});
-
-		project.getTasks().create(CHECK_TASK_NAME, new Action<Task>() {
-			@Override
-			public void execute(Task task) {
-				task.dependsOn(dependencyVersionMappingCheck);
-				task.dependsOn(springIoTest);
-				task.dependsOn(incompleteExcludesCheck);
-				task.dependsOn(alternativeDependenciesCheck);
-			}
-		});
+		return springIoTest;
 	}
 
 	private void maybeCreateJdkTest(final Project project,
@@ -173,7 +142,6 @@ public class SpringIoPlugin implements Plugin<Project> {
 		if (!project.hasProperty(whichJdk)) {
 			return;
 		}
-
 		Object jdkHome = project.getProperties().get(whichJdk);
 		final File exec = new File(
 				jdkHome instanceof File ? ((File) jdkHome) : new File(jdkHome.toString()),
@@ -183,47 +151,30 @@ public class SpringIoPlugin implements Plugin<Project> {
 					+ " does not exist! Please provide a valid JDK home as a command-line argument using -P"
 					+ whichJdk + "=<path>");
 		}
-
-		final Test springIoJdkTest = project.getTasks().create("springIo" + jdk + "Test",
-				Test.class, new Action<Test>() {
-
-					@SuppressWarnings("deprecation")
-					@Override
-					public void execute(Test test) {
-						File htmlDestination = project.file(project.getBuildDir()
-								+ "/reports/spring-io-" + jdk.toLowerCase() + "-tests");
-						File junitXmlDestination = project.file(project.getBuildDir()
-								+ "/spring-io-" + jdk.toLowerCase() + "-test-results");
-						if (GradleVersion.current()
-								.compareTo(GradleVersion.version("4.0")) < 0) {
-							test.getReports().getHtml()
-									.setDestination((Object) htmlDestination);
-							test.getReports().getJunitXml()
-									.setDestination((Object) junitXmlDestination);
-							test.setTestClassesDir(
-									springIoTestSourceSet.getOutput().getClassesDir());
-						}
-						else {
-							test.getReports().getHtml().setDestination(htmlDestination);
-							test.getReports().getJunitXml()
-									.setDestination(junitXmlDestination);
-							test.setTestClassesDirs(
-									springIoTestSourceSet.getOutput().getClassesDirs());
-						}
-						test.executable(exec);
-					}
-
-				});
-		springIoTest.dependsOn(springIoJdkTest);
-		project.afterEvaluate(new Action<Project>() {
-
-			@Override
-			public void execute(Project project) {
-				springIoJdkTest.setClasspath(springIoTestSourceSet.getRuntimeClasspath());
-
+		String taskName = "springIo" + jdk + "Test";
+		@SuppressWarnings("deprecation")
+		Test springIoJdkTest = project.getTasks().create(taskName, Test.class, test -> {
+			File htmlDestination = project.file(project.getBuildDir()
+					+ "/reports/spring-io-" + jdk.toLowerCase() + "-tests");
+			File junitXmlDestination = project.file(project.getBuildDir() + "/spring-io-"
+					+ jdk.toLowerCase() + "-test-results");
+			if (GradleVersion.current().compareTo(GradleVersion.version("4.0")) < 0) {
+				test.getReports().getHtml().setDestination((Object) htmlDestination);
+				test.getReports().getJunitXml()
+						.setDestination((Object) junitXmlDestination);
+				test.setTestClassesDir(springIoTestSourceSet.getOutput().getClassesDir());
 			}
-
+			else {
+				test.getReports().getHtml().setDestination(htmlDestination);
+				test.getReports().getJunitXml().setDestination(junitXmlDestination);
+				test.setTestClassesDirs(
+						springIoTestSourceSet.getOutput().getClassesDirs());
+			}
+			test.executable(exec);
 		});
+		springIoTest.dependsOn(springIoJdkTest);
+		project.afterEvaluate(localProject -> springIoJdkTest
+				.setClasspath(springIoTestSourceSet.getRuntimeClasspath()));
 	}
 
 	String createRelativeJavaExec(boolean isWindows) {
@@ -232,6 +183,20 @@ public class SpringIoPlugin implements Plugin<Project> {
 
 	private Boolean isWindows() {
 		return File.pathSeparatorChar == ';';
+	}
+
+	private DependencyVersionMappingCheckTask createDependencyVersionMappingCheckTask(
+			final Project project, DependencyManagementExtension dependencyManagement,
+			Configuration springIoTestRuntimeConfiguration) {
+		DependencyVersionMappingCheckTask dependencyVersionMappingCheck = project
+				.getTasks().create(CHECK_DEPENDENCY_VERSION_MAPPING_TASK_NAME,
+						DependencyVersionMappingCheckTask.class);
+		dependencyVersionMappingCheck.conventionMapping("configuration", () -> project
+				.getConfigurations().getByName(JavaPlugin.RUNTIME_CONFIGURATION_NAME));
+		dependencyVersionMappingCheck.conventionMapping("managedVersions",
+				() -> dependencyManagement.getManagedVersionsForConfiguration(
+						springIoTestRuntimeConfiguration));
+		return dependencyVersionMappingCheck;
 	}
 
 }
