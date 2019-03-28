@@ -6,7 +6,7 @@ apply plugin: 'maven'
 group = 'io.spring.gradle'
 
 repositories {
-    mavenCentral()
+    maven { url 'https://repo.maven.apache.org/maven2/' }
     maven { url 'https://repo.spring.io/plugins-release' }
 }
 
